@@ -81,7 +81,7 @@ describe('tokenizer', () => {
       { type: TokenTypes.Eof, literal: '' },
     ];
     const t = new Tokenizer(input);
-    runTests(expected, t, true);
+    runTests(expected, t );
 
   });
 
