@@ -2,7 +2,6 @@ import { describe, it, expect } from 'bun:test';
 import { Tokenizer } from './tokenizer';
 import { TokenTypes } from './types';
 import type { Token } from './types';
-
 const simpleTests = [
   {
     input: `-+`,
@@ -34,13 +33,16 @@ const simpleTests = [
     ]
   }];
 
-function runTests(expected: Token[], tokenizer: Tokenizer) {
+function runTests(expected: Token[], tokenizer: Tokenizer, log = false) {
   for (let i = 0; i < expected.length; i++) {
     const actual = tokenizer.getToken();
-    console.log(actual.literal, expected[i].literal);
+    if (log) {
+      console.log('expected', expected[i]);
+      console.log('actual', actual);
+
+    }
     expect(expected[i].literal).toBe(actual.literal);
     expect(expected[i].type).toBe(actual.type);
-
   }
 
 }
@@ -56,6 +58,7 @@ describe('tokenizer', () => {
     const tokenizer = new Tokenizer(input);
     runTests(expected, tokenizer);
   });
+
   it('handles simple expression', () => {
     const input = 'x + x';
     const expected: Token[] = [
@@ -64,7 +67,21 @@ describe('tokenizer', () => {
       { type: TokenTypes.Ident, literal: 'x' },
       { type: TokenTypes.Eof, literal: '' },
     ];
-    const tokenizer = new Tokenizer(input);
+    const t = new Tokenizer(input);
+    runTests(expected, t);
+  });
+
+  it('handles longer idents and semicolons', () => {
+    const input = 'abba - abba;';
+    const expected: Token[] = [
+      { type: TokenTypes.Ident, literal: 'abba' },
+      { type: TokenTypes.Minus, literal: '-' },
+      { type: TokenTypes.Ident, literal: 'abba' },
+      { type: TokenTypes.SemiColon, literal: ';' },
+      { type: TokenTypes.Eof, literal: '' },
+    ];
+    const t = new Tokenizer(input);
+    runTests(expected, t, true);
 
   });
 

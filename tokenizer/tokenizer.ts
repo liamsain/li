@@ -1,6 +1,5 @@
-import { TokenTypes } from './types'
+import { TokenTypes, Keywords } from './types'
 import type { Token } from './types'
-
 
 export class Tokenizer {
   input: string;
@@ -33,19 +32,33 @@ export class Tokenizer {
       case '+':
         tok.type = TokenTypes.Plus;
         tok.literal = '+';
+        this.pos += 1;
         break;
       case '-':
         tok.type = TokenTypes.Minus;
         tok.literal = '-';
-      break;
+        this.pos += 1;
+        break;
+      case ';':
+        tok.type = TokenTypes.SemiColon;
+        tok.literal = ';'
+        this.pos += 1;
+        break;
       default:
-        // if (isChar(
+        if (isLetter(this.currentChar)) {
+          tok.literal = this.readIdentifier();
+          const keyword = Keywords.get(tok.literal);
+          if (keyword) {
+            tok.type = keyword
+          } else {
+            tok.type = TokenTypes.Ident;
+          }
+        }
         break;
     }
-    this.pos += 1;
     return tok;
-
   }
+
   eatWhitespace() {
     let currPos = this.pos;
     while (this.input[currPos] === ' ') {
@@ -54,25 +67,17 @@ export class Tokenizer {
     this.pos = currPos;
   }
 
-  // advance() {
-  //   this.pos++;
-  //   if (this.pos < this.input.length) {
-  //     this.currentChar = this.input[this.pos];
-  //   } else {
-  //     this.currentChar = '';
-  //   }
-  // }
-
-  // peekNextChar() {
-  //   const nextPos = this.pos + 1;
-  //   if (nextPos < this.input.length) {
-  //     return this.input[nextPos];
-  //   } else {
-  //     return '';
-  //   }
-  // }
+  readIdentifier(): string {
+    const startPos = this.pos;
+    while (this.pos <= this.inputLength - 1 && isLetter(this.input[this.pos])) {
+      this.pos += 1;
+    }
+    return this.input.substring(startPos, this.pos);
+  }
 
 }
+
+
 function isLetter(str: string) {
   const isLowerCase = str >= 'a' && str <= 'z';
   const isUpperCase = str >= 'A' && str <= 'Z';
