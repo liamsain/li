@@ -1,30 +1,39 @@
 export const TokenTypes = {
+  // single char
   Plus: 'Plus',
   Minus: 'Minus',
   Mult: 'Mult',
   Div: 'Div',
-  Ident: 'Ident',
+  Lt: 'Lt',
+  Gt: 'Gt',
   LParen: 'LParen',
   RParen: 'RParen',
   Assign: 'Assign',
-  Eq: 'Equals',
+  SemiColon: 'SemiColon',
+  Illegal: 'Illegal',
+  Eof: 'Eof',
+  LBrace: 'LBrace',
+  RBrace: 'RBrace',
+  Not: 'Not',
+
+  // two char
+  Eq: 'Eq',
   Neq: 'Neq',
-  Lt: 'Lt',
-  Gt: 'Gt',
   Or: 'Or',
   And: 'And',
-  Int: 'Int',
-  Eof: 'Eof',
-  SemiColon: 'SemiColon',
-  Illegal: '',
-  
-  Let: 'Let',
-  Function: 'Fn',
   If: 'If',
+  Fn: 'Fn',
+  Inc: 'Inc',
+  Dec: 'Dec',
+  
+  // > 2 char
+  Ident: 'Ident',
+  Let: 'Let',
   Else: 'Else',
   True: 'True',
   False: 'False',
-  Return: 'Return'
+  Return: 'Return',
+  Int: 'Int',
 } as const
 
 export type TokenType = typeof TokenTypes[keyof typeof TokenTypes]

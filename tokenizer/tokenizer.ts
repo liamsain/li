@@ -1,5 +1,5 @@
-import { TokenTypes, Keywords } from './types'
-import type { Token } from './types'
+import { TokenTypes, Keywords } from './tokenTypes'
+import type { Token } from './tokenTypes'
 
 export class Tokenizer {
   input: string;
@@ -29,6 +29,90 @@ export class Tokenizer {
       literal: ''
     };
     switch (this.currentChar) {
+      case '\n': 
+        this.line += 1;
+        this.pos += 1;
+      break;
+      case '{':
+        tok.type = TokenTypes.LBrace;
+        tok.literal = '{';
+        this.pos += 1;
+        break;
+      case '}':
+        tok.type = TokenTypes.RBrace;
+        tok.literal = '}';
+        this.pos += 1;
+        break;
+      case '|':
+        if (this.input[this.pos + 1] == '|') {
+          tok.type = TokenTypes.Or;
+          tok.literal = '||';
+          this.pos += 2;
+        } else {
+          this.pos += 1;
+        }
+        break;
+      case '&':
+        if (this.input[this.pos + 1] == '&') {
+          tok.type = TokenTypes.And;
+          tok.literal = '&&';
+          this.pos += 2;
+        } else {
+          this.pos += 1;
+        }
+        break;
+      case '(':
+        tok.type = TokenTypes.LParen;
+        tok.literal = '(';
+        this.pos += 1;
+        break;
+      case ')':
+        tok.type = TokenTypes.RParen;
+        tok.literal = ')';
+        this.pos += 1;
+      break;
+      case '!':
+        if (this.input[this.pos + 1] == '=') {
+          tok.type = TokenTypes.Neq;
+          tok.literal = '!=';
+          this.pos += 2;
+        } else {
+          tok.type = TokenTypes.Not;
+          tok.literal = '!';
+          this.pos += 1;
+        }
+      break;
+      case '/':
+        tok.type = TokenTypes.Div;
+        tok.literal = '/';
+        this.pos += 1;
+        break;
+      case '*':
+        tok.type = TokenTypes.Mult;
+        tok.literal = '*';
+        this.pos += 1;
+        break;
+      case '>':
+        tok.type = TokenTypes.Gt;
+        tok.literal = '>';
+        this.pos += 1;
+        break;
+      case '<':
+        tok.type = TokenTypes.Lt;
+        tok.literal = '<';
+        this.pos += 1;
+        break;
+      case '=':
+        if (this.input[this.pos + 1] == '=') {
+          tok.type = TokenTypes.Eq;
+          tok.literal = '==';
+          this.pos += 2;
+        } else {
+          tok.type = TokenTypes.Assign;
+          tok.literal = '=';
+          this.pos += 1;
+        }
+        break;
       case '+':
         tok.type = TokenTypes.Plus;
         tok.literal = '+';
@@ -45,6 +129,7 @@ export class Tokenizer {
         this.pos += 1;
         break;
       default:
+        console.log('cur ', this.currentChar);
         if (isLetter(this.currentChar)) {
           tok.literal = this.readIdentifier();
           const keyword = Keywords.get(tok.literal);
@@ -53,6 +138,9 @@ export class Tokenizer {
           } else {
             tok.type = TokenTypes.Ident;
           }
+        } else if (isDigit(this.currentChar)) {
+          tok.literal = this.readNumber();
+          tok.type = TokenTypes.Int;
         }
         break;
     }
@@ -74,9 +162,17 @@ export class Tokenizer {
     }
     return this.input.substring(startPos, this.pos);
   }
-
+  readNumber(): string {
+    const startPos = this.pos;
+    while (this.pos <= this.inputLength - 1 && isDigit(this.input[this.pos])) {
+      this.pos += 1;
+    }
+    return this.input.substring(startPos, this.pos);
+  }
 }
-
+function isDigit(str: string) {
+  return str.length === 1 && !isNaN(parseInt(str));
+}
 
 function isLetter(str: string) {
   const isLowerCase = str >= 'a' && str <= 'z';

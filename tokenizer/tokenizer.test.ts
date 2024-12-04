@@ -1,45 +1,15 @@
 import { describe, it, expect } from 'bun:test';
 import { Tokenizer } from './tokenizer';
-import { TokenTypes } from './types';
-import type { Token } from './types';
-const simpleTests = [
-  {
-    input: `-+`,
-    expected: [
-      { type: TokenTypes.Minus, literal: '-' },
-      { type: TokenTypes.Plus, literal: '+' },
-      { type: TokenTypes.Eof, literal: '' },
-    ]
-  },
+import { TokenTypes } from './tokenTypes';
+import type { Token } from './tokenTypes';
 
-  {
-    input: `x + x`,
-    expected: [
-      { type: TokenTypes.Ident, literal: 'x' },
-      { type: TokenTypes.Plus, literal: '+' },
-      { type: TokenTypes.Ident, literal: 'x' },
-      { type: TokenTypes.Eof, literal: '' },
-    ]
-  },
-  {
-    input: `let x = 10;`,
-    expected: [
-      { type: TokenTypes.Let, literal: 'let' },
-      { type: TokenTypes.Ident, literal: 'x' },
-      { type: TokenTypes.Assign, literal: '=' },
-      { type: TokenTypes.Int, literal: '10' },
-      { type: TokenTypes.SemiColon, literal: ';' },
-      { type: TokenTypes.Eof, literal: '' },
-    ]
-  }];
-
-function runTests(expected: Token[], tokenizer: Tokenizer, log = false) {
+function runTests(expected: Token[], input: string, log = false) {
+  const tokenizer = new Tokenizer(input);
   for (let i = 0; i < expected.length; i++) {
     const actual = tokenizer.getToken();
     if (log) {
       console.log('expected', expected[i]);
       console.log('actual', actual);
-
     }
     expect(expected[i].literal).toBe(actual.literal);
     expect(expected[i].type).toBe(actual.type);
@@ -55,8 +25,7 @@ describe('tokenizer', () => {
       { type: TokenTypes.Eof, literal: '' },
     ];
 
-    const tokenizer = new Tokenizer(input);
-    runTests(expected, tokenizer);
+    runTests(expected, input);
   });
 
   it('handles simple expression', () => {
@@ -67,8 +36,7 @@ describe('tokenizer', () => {
       { type: TokenTypes.Ident, literal: 'x' },
       { type: TokenTypes.Eof, literal: '' },
     ];
-    const t = new Tokenizer(input);
-    runTests(expected, t);
+    runTests(expected, input);
   });
 
   it('handles longer idents and semicolons', () => {
@@ -80,9 +48,100 @@ describe('tokenizer', () => {
       { type: TokenTypes.SemiColon, literal: ';' },
       { type: TokenTypes.Eof, literal: '' },
     ];
-    const t = new Tokenizer(input);
-    runTests(expected, t );
-
+    runTests(expected, input );
   });
+  it ('handles simle assignment statement', () => {
+    const input = 'let num = 10;';
+    const expected: Token[] = [
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'num'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '10'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input);
+  });
+  it ('handles loads of sing char token types', () => {
+    const input = '(first + second) / 555 * 10 - 3 > 2 < 700; { 4 * 4};!something;'
+    const expected: Token[] = [
+      { type: TokenTypes.LParen, literal: '(' },
+      { type: TokenTypes.Ident, literal: 'first' },
+      { type: TokenTypes.Plus, literal: '+' },
+      { type: TokenTypes.Ident, literal: 'second' },
+      { type: TokenTypes.RParen, literal: ')' },
+      { type: TokenTypes.Div, literal: '/' },
+      { type: TokenTypes.Int, literal: '555' },
+      { type: TokenTypes.Mult, literal: '*' },
+      { type: TokenTypes.Int, literal: '10' },
+      { type: TokenTypes.Minus, literal: '-' },
+      { type: TokenTypes.Int, literal: '3' },
+      { type: TokenTypes.Gt, literal: '>' },
+      { type: TokenTypes.Int, literal: '2' },
+      { type: TokenTypes.Lt, literal: '<' },
+      { type: TokenTypes.Int, literal: '700' },
+      { type: TokenTypes.SemiColon, literal: ';' },
+      { type: TokenTypes.LBrace, literal: '{' },
+      { type: TokenTypes.Int, literal: '4' },
+      { type: TokenTypes.Mult, literal: '*' },
+      { type: TokenTypes.Int, literal: '4' },
+      { type: TokenTypes.RBrace, literal: '}' },
+      { type: TokenTypes.SemiColon, literal: ';' },
+      { type: TokenTypes.Not, literal: '!'},
+      { type: TokenTypes.Ident, literal: 'something'},
+      { type: TokenTypes.SemiColon, literal: ';' },
+      { type: TokenTypes.Eof, literal: '' },
+    ];
+    runTests(expected, input);
+  });
+
+  it ('handles loads of two char token types', () => {
+    const input = '5 == 5;6 != 2; 3 || 0; 5 && 10; if (5 == 10)'
+    const expected: Token[] = [
+      {type: TokenTypes.Int, literal: '5' },
+      {type: TokenTypes.Eq, literal: '==' },
+      {type: TokenTypes.Int, literal: '5' },
+      {type: TokenTypes.SemiColon, literal: ';' },
+      {type: TokenTypes.Int, literal: '6' },
+      {type: TokenTypes.Neq, literal: '!=' },
+      {type: TokenTypes.Int, literal: '2' },
+      {type: TokenTypes.SemiColon, literal: ';' },
+      {type: TokenTypes.Int, literal: '3' },
+      {type: TokenTypes.Or, literal: '||' },
+      {type: TokenTypes.Int, literal: '0' },
+      {type: TokenTypes.SemiColon, literal: ';' },
+      {type: TokenTypes.Int, literal: '5' },
+      {type: TokenTypes.And, literal: '&&' },
+      {type: TokenTypes.Int, literal: '10' },
+      {type: TokenTypes.SemiColon, literal: ';' },
+      {type: TokenTypes.If, literal: 'if' },
+      {type: TokenTypes.LParen, literal: '(' },
+      {type: TokenTypes.Int, literal: '5' },
+      {type: TokenTypes.Eq, literal: '==' },
+      {type: TokenTypes.Int, literal: '10' },
+      {type: TokenTypes.RParen, literal: ')' },
+      {type: TokenTypes.Eof, literal: '' },
+    ];
+    runTests(expected, input);
+  });
+  it ('handles multiline programs', () => {
+    const input = `let x = 10;
+    let y = 5;`;
+    const expected: Token[] = [
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'x'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '10'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'y'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '5'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input, true);
+  });
+
 
 });
