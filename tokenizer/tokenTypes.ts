@@ -15,6 +15,7 @@ export const TokenTypes = {
   LBrace: 'LBrace',
   RBrace: 'RBrace',
   Not: 'Not',
+  Mod: 'Mod',
 
   // two char
   Eq: 'Eq',
@@ -25,6 +26,8 @@ export const TokenTypes = {
   Fn: 'Fn',
   Inc: 'Inc',
   Dec: 'Dec',
+  Lteq: 'LessThanOrEquals',
+  Gteq: 'GreaterThanOrEquals',
   
   // > 2 char
   Ident: 'Ident',
@@ -34,6 +37,8 @@ export const TokenTypes = {
   False: 'False',
   Return: 'Return',
   Int: 'Int',
+  Float: 'Float',
+  String: 'String',
 } as const
 
 export type TokenType = typeof TokenTypes[keyof typeof TokenTypes]
@@ -41,6 +46,8 @@ export type TokenType = typeof TokenTypes[keyof typeof TokenTypes]
 export interface Token {
   type: TokenType;
   literal: string;
+  line: number;
+  error?:string;
 }
 
 export const Keywords = new Map<string, TokenType>([

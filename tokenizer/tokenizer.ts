@@ -18,16 +18,18 @@ export class Tokenizer {
 
     this.eatWhitespace();
     this.eatComment();
-    if (this.pos >= this.inputLength)  {
+    if (this.pos >= this.inputLength) {
       return {
         type: TokenTypes.Eof,
-        literal: ''
+        literal: '',
+        line: this.line
       }
     }
     this.currentChar = this.input[this.pos];
     const tok: Token = {
       type: TokenTypes.Illegal,
-      literal: ''
+      literal: '',
+      line: this.line
     };
     switch (this.currentChar) {
       case '{':
@@ -67,7 +69,7 @@ export class Tokenizer {
         tok.type = TokenTypes.RParen;
         tok.literal = ')';
         this.pos += 1;
-      break;
+        break;
       case '!':
         if (this.input[this.pos + 1] == '=') {
           tok.type = TokenTypes.Neq;
@@ -78,7 +80,7 @@ export class Tokenizer {
           tok.literal = '!';
           this.pos += 1;
         }
-      break;
+        break;
       case '/':
         tok.type = TokenTypes.Div;
         tok.literal = '/';
@@ -90,13 +92,30 @@ export class Tokenizer {
         this.pos += 1;
         break;
       case '>':
-        tok.type = TokenTypes.Gt;
-        tok.literal = '>';
-        this.pos += 1;
+        if (this.input[this.pos + 1] == '=') {
+          tok.type = TokenTypes.Gteq;
+          tok.literal = '>=';
+          this.pos += 2;
+        } else {
+          tok.type = TokenTypes.Gt;
+          tok.literal = '>';
+          this.pos += 1;
+        }
         break;
       case '<':
-        tok.type = TokenTypes.Lt;
-        tok.literal = '<';
+        if (this.input[this.pos + 1] == '=') {
+          tok.type = TokenTypes.Lteq;
+          tok.literal = '<=';
+          this.pos += 2;
+        } else {
+          tok.type = TokenTypes.Lt;
+          tok.literal = '<';
+          this.pos += 1;
+        }
+        break;
+      case '%':
+        tok.type = TokenTypes.Mod;
+        tok.literal = '%';
         this.pos += 1;
         break;
       case '=':
@@ -125,6 +144,15 @@ export class Tokenizer {
         tok.literal = ';'
         this.pos += 1;
         break;
+      case '\'':
+        tok.type = TokenTypes.String;
+        const str = this.readString();
+        tok.literal = str;
+        if (str[str.length - 1] != '\'') {
+          tok.type = TokenTypes.Illegal;
+          tok.error = `Line ${this.line} | String was not terminated: ${str}`;
+        }
+        break;
       default:
         if (isLetter(this.currentChar)) {
           tok.literal = this.readIdentifier();
@@ -135,9 +163,17 @@ export class Tokenizer {
             tok.type = TokenTypes.Ident;
           }
         } else if (isDigit(this.currentChar)) {
-          tok.literal = this.readNumber();
-          tok.type = TokenTypes.Int;
-        } 
+          const numStr = this.readNumber();
+          const numStrSplit = numStr.split('.');
+          tok.literal = numStr;
+          if (numStrSplit.length == 1) {
+            tok.type = TokenTypes.Int;
+          } else if (numStrSplit.length == 2) {
+            tok.type = TokenTypes.Float;
+          } else {
+            tok.type = TokenTypes.Illegal;
+          }
+        }
         break;
     }
     return tok;
@@ -175,6 +211,19 @@ export class Tokenizer {
     }
   }
 
+  readString(): string {
+    const startPos = this.pos;
+    while (this.pos <= this.inputLength - 1) {
+      this.pos += 1;
+      if (this.input[this.pos] == '\'') {
+        this.pos += 1;
+        break;
+      }
+    }
+    return this.input.substring(startPos, this.pos);
+
+  }
+
   readIdentifier(): string {
     const startPos = this.pos;
     while (this.pos <= this.inputLength - 1 && isLetter(this.input[this.pos])) {
@@ -184,14 +233,14 @@ export class Tokenizer {
   }
   readNumber(): string {
     const startPos = this.pos;
-    while (this.pos <= this.inputLength - 1 && isDigit(this.input[this.pos])) {
+    while (this.pos <= this.inputLength - 1 && (isDigit(this.input[this.pos]) || this.input[this.pos] == '.')) {
       this.pos += 1;
     }
     return this.input.substring(startPos, this.pos);
   }
 }
-function isDigit(str: string) {
-  return str.length === 1 && !isNaN(parseInt(str));
+function isDigit(ch: string) {
+  return ch.length === 1 && ch >= '0' && ch <= '9';
 }
 
 function isLetter(str: string) {
