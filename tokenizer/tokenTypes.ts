@@ -44,7 +44,7 @@ export interface Token {
 }
 
 export const Keywords = new Map<string, TokenType>([
-  ['fn', TokenTypes.Function],
+  ['fn', TokenTypes.Fn],
   ['let', TokenTypes.Let],
   ['if', TokenTypes.If],
   ['else', TokenTypes.Else],

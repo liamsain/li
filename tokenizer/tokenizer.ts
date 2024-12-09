@@ -15,9 +15,10 @@ export class Tokenizer {
   }
 
   getToken(): Token {
-    debugger;
+
     this.eatWhitespace();
-    if (this.pos >= this.inputLength) {
+    this.eatComment();
+    if (this.pos >= this.inputLength)  {
       return {
         type: TokenTypes.Eof,
         literal: ''
@@ -29,10 +30,6 @@ export class Tokenizer {
       literal: ''
     };
     switch (this.currentChar) {
-      case '\n': 
-        this.line += 1;
-        this.pos += 1;
-      break;
       case '{':
         tok.type = TokenTypes.LBrace;
         tok.literal = '{';
@@ -129,7 +126,6 @@ export class Tokenizer {
         this.pos += 1;
         break;
       default:
-        console.log('cur ', this.currentChar);
         if (isLetter(this.currentChar)) {
           tok.literal = this.readIdentifier();
           const keyword = Keywords.get(tok.literal);
@@ -141,7 +137,7 @@ export class Tokenizer {
         } else if (isDigit(this.currentChar)) {
           tok.literal = this.readNumber();
           tok.type = TokenTypes.Int;
-        }
+        } 
         break;
     }
     return tok;
@@ -149,10 +145,34 @@ export class Tokenizer {
 
   eatWhitespace() {
     let currPos = this.pos;
-    while (this.input[currPos] === ' ') {
-      currPos += 1;
+    while (true) {
+      if (this.input[currPos] === ' ') {
+        currPos += 1;
+      } else if (this.input[currPos] == '\n') {
+        this.line += 1;
+        currPos += 1;
+      } else {
+        break;
+      }
     }
     this.pos = currPos;
+  }
+
+  eatComment() {
+    const isAtComment = () => this.input[this.pos] === '/' && this.input[this.pos + 1] === '/';
+    const isAtNewLineCh = () => this.input[this.pos] == '\n';
+    const isAtEndOfInput = () => this.pos >= this.inputLength;
+    if (isAtComment()) {
+      while (true) {
+        while (!isAtNewLineCh() && !isAtEndOfInput()) {
+          this.pos += 1;
+        }
+        this.eatWhitespace();
+        if (!isAtComment() || isAtEndOfInput()) {
+          break;
+        }
+      }
+    }
   }
 
   readIdentifier(): string {

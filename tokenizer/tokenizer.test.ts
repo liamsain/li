@@ -140,8 +140,96 @@ describe('tokenizer', () => {
       {type: TokenTypes.SemiColon, literal: ';'},
       {type: TokenTypes.Eof, literal: ''},
     ];
-    runTests(expected, input, true);
+    runTests(expected, input);
   });
+
+  it('handles keywords', () => {
+    const input = 'fn let if else return true false';
+    const expected: Token[] = [
+      {type: TokenTypes.Fn, literal: 'fn'},
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.If, literal: 'if'},
+      {type: TokenTypes.Else, literal: 'else'},
+      {type: TokenTypes.Return, literal: 'return'},
+      {type: TokenTypes.True, literal: 'true'},
+      {type: TokenTypes.False, literal: 'false'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input);
+  });
+  it('handles keywords in expressions', () => {
+    const input = 'if (x == 10) { return true; } else { return false; }';
+    const expected: Token[] = [
+      {type: TokenTypes.If, literal: 'if'},
+      {type: TokenTypes.LParen, literal: '('},
+      {type: TokenTypes.Ident, literal: 'x'},
+      {type: TokenTypes.Eq, literal: '=='},
+      {type: TokenTypes.Int, literal: '10'},
+      {type: TokenTypes.RParen, literal: ')'},
+      {type: TokenTypes.LBrace, literal: '{'},
+      {type: TokenTypes.Return, literal: 'return'},
+      {type: TokenTypes.True, literal: 'true'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.RBrace, literal: '}'},
+      {type: TokenTypes.Else, literal: 'else'},
+      {type: TokenTypes.LBrace, literal: '{'},
+      {type: TokenTypes.Return, literal: 'return'},
+      {type: TokenTypes.False, literal: 'false'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.RBrace, literal: '}'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input);
+  });
+
+  it('handles comments', () => {
+    const input = `let x = 10; // this is a comment
+    let y = 5;`;
+    const expected: Token[] = [
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'x'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '10'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'y'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '5'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input);
+  });
+
+  it('handles comments on multiple lines', () => {
+    const input = `// this is a comment
+    // this is another comment
+    let x = 10;`;
+    const expected: Token[] = [
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'x'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '10'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input);
+  });
+  it ('handles when there is a comment on the last line', () => {
+    const input = `let x = 10; 
+    // this is a comment`;
+    const expected: Token[] = [
+      {type: TokenTypes.Let, literal: 'let'},
+      {type: TokenTypes.Ident, literal: 'x'},
+      {type: TokenTypes.Assign, literal: '='},
+      {type: TokenTypes.Int, literal: '10'},
+      {type: TokenTypes.SemiColon, literal: ';'},
+      {type: TokenTypes.Eof, literal: ''},
+    ];
+    runTests(expected, input);
+  });
+
+
 
 
 });
