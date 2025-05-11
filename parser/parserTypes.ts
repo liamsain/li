@@ -1,21 +1,21 @@
 import type { Token } from '../tokenizer/tokenTypes';
-class Statement { }
-class Expression {}
-class Integer extends Expression {
+export class Statement { }
+export class Expression {}
+export class Integer extends Expression {
   value: number = 0;
   constructor(val: number) {
     super();
     this.value = val
   }
 }
-class Float extends Expression {
+export class Float extends Expression {
   value: number = 0;
   constructor(val: number) {
     super();
     this.value = val;
   }
 }
-class UnOp extends Expression {
+export class UnOp extends Expression {
   // e.g. -x
   op: Token;
   operand: Expression;
@@ -28,7 +28,7 @@ class UnOp extends Expression {
     return `UnOp ${this.op.literal}, ${this.operand}`;
   }
 }
-class Grouping extends Expression {
+export class Grouping extends Expression {
   // example : (<expr>)
   value: Expression;
   constructor(val: Expression) {
@@ -39,7 +39,7 @@ class Grouping extends Expression {
     return `Grouping ${this.value}`;
   }
 }
-class BinOp extends Expression {
+export class BinOp extends Expression {
   // e.g. x + y
   op: Token;
   left: Expression;
@@ -55,10 +55,10 @@ class BinOp extends Expression {
   }
 }
 
-class WhileStatement extends Statement {
+export class WhileStatement extends Statement {
 
 }
 
-class Assignment extends Statement {
-  
+export class Assignment extends Statement {
+
 }

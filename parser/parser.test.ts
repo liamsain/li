@@ -9,5 +9,7 @@ describe('parser', () => {
     const tokenizer = new Tokenizer(exp);
     const tokens: Token[] = tokenizer.getAllTokens();
     const parser = new Parser(tokens);
+    debugger;
+    parser.parse();
   });
 });

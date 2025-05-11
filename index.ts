@@ -24,7 +24,7 @@ async function readInputFile(path: string) {
       const parser = new Parser(tokens);
       const ast = parser.parse();
       console.log('AST: ');
-      console.log(ast);
+      console.dir(ast, {depth: null});
     } else {
       console.error(`File not found: ${path}`);
     }
