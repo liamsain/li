@@ -13,6 +13,16 @@ export class Tokenizer {
     this.input = input;
     this.inputLength = input.length;
   }
+  getAllTokens(): Token[] {
+    const result: Token[] = [];
+    let reachedEof = false;
+    while (!reachedEof) {
+      const tok = this.getToken();
+      result.push(tok);
+      reachedEof = tok.type === TokenTypes.Eof;
+    }
+    return result;
+  }
 
   getToken(): Token {
 

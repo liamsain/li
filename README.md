@@ -1,15 +1,5 @@
-# my-lang
-
-To install dependencies:
-
-```bash
-bun install
-```
-
-To run:
-
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.1.38. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+## Jargon
+term: - or +
+factor: * or /
+expression: evaluates to a result
+statement: performs an action e.g. while, for, if, =

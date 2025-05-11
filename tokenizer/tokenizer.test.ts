@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { Tokenizer } from './tokenizer';
+import { Tokenizer } from '.';
 import { TokenTypes } from './tokenTypes';
 import type { Token } from './tokenTypes';
 

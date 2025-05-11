@@ -1,22 +1,30 @@
+import { Tokenizer } from './tokenizer';
+import { Parser } from './parser';
 main();
 async function main() {
-  process.argv.slice(2).forEach(arg => {
-    if (arg) {
-      // assume arg is a file path and read it:
-      readInputFile(arg);
+  const filePaths: string[] = process.argv.slice(2);
+  if (filePaths.length) {
+    for (const file of filePaths) {
+      console.log('from loop: ', file);
+      await readInputFile(file);
     }
-  });
+  }
 }
 
 async function readInputFile(path: string) {
   try {
-    // const file = fs.readFileSync(arg, 'utf8');
     const file = Bun.file(path);
     const exists = await file.exists();
     if (exists) {
       const content = await file.text();
-      console.log(content);
-      return content;
+      const tok = new Tokenizer(content);
+      const tokens = tok.getAllTokens();
+      console.log('Tokens: ');
+      console.log(tokens);
+      const parser = new Parser(tokens);
+      const ast = parser.parse();
+      console.log('AST: ');
+      console.log(ast);
     } else {
       console.error(`File not found: ${path}`);
     }
