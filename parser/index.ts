@@ -1,6 +1,6 @@
 import type { Token, TokenType } from '../tokenizer/tokenTypes';
 import { TokenTypes } from '../tokenizer/tokenTypes';
-import { BinOp, Expression, UnOp, Integer, Grouping, Float } from './parserTypes';
+import { Bool, LiString, BinOp, Expression, UnOp, Integer, Grouping, Float } from './parserTypes';
 
 export class Parser {
   tokens: Token[];
@@ -12,82 +12,95 @@ export class Parser {
     this.tokensLength = tokens.length;
   }
 
-  get currentToken(): Token {
-    return this.tokens[this.currentTokenIndex]
-  }
-  get prevToken() {
-    return this.tokens[this.currentTokenIndex - 1];
-  }
-  get nextToken() {
-    return this.tokens[this.currentTokenIndex + 1];
-  }
-
   currentTokenIsOneOf(arr: TokenType[]) {
     if (this.currentTokenIndex >= this.tokens.length) {
       return false;
-    } else if (arr.some(x => x === this.currentToken.type)) {
-      this.currentTokenIndex += 1;
+    } else if (arr.some(x => x === this.tokens[this.currentTokenIndex].type)) {
       return true;
     }
     return false;
   }
   currentTokenMatches(tokenType: TokenType) {
     if (this.currentTokenIndex >= this.tokensLength) {
+      const prev = this.tokens[this.currentTokenIndex - 1];
+      console.error(`Parser error: Found ${prev.literal} at the end of parsing at line ${prev.line}`);
       return false;
-    } else if (this.currentToken.type !== tokenType) {
+    } else if (this.tokens[this.currentTokenIndex].type !== tokenType) {
       return false;
     }
-    this.currentTokenIndex += 1;
     return true;
   }
 
   primary(): Expression {
+    const currentTok = this.tokens[this.currentTokenIndex];
+    if (this.currentTokenIsOneOf([TokenTypes.True, TokenTypes.False])) {
+      console.log(currentTok);
+      const result = new Bool(currentTok.literal === 'true', currentTok.line);
+      this.currentTokenIndex += 1;
+      return result;
+    }
+    if (this.currentTokenMatches(TokenTypes.String)) {
+      const result = new LiString(String(currentTok.literal), currentTok.line);
+      this.currentTokenIndex += 1;
+      return result;
+    }
     if (this.currentTokenMatches(TokenTypes.Int)) {
-      return new Integer(Number(this.prevToken.literal));
+      const result = new Integer(Number(currentTok.literal), currentTok.line);
+      this.currentTokenIndex += 1;
+      return result
     } else if (this.currentTokenMatches(TokenTypes.Float)) {
-      return new Float(Number(this.prevToken.literal))
+      const result = new Float(Number(currentTok.literal), currentTok.line)
+      this.currentTokenIndex += 1;
+      return result;
     } else if (this.currentTokenMatches(TokenTypes.LParen)) {
-      const expr = this.expr();
+      this.currentTokenIndex += 1;
+      const expr = this.addSub();
       if (!this.currentTokenMatches(TokenTypes.RParen)) {
-        throw new Error('Expected ")"');
+        const tok = this.tokens[this.currentTokenIndex];
+        throw new Error(`Parser error: Expected ')' at line ${tok.line}, but received '${tok.literal}'`);
       } else {
-        return new Grouping(expr);
+        const tok = this.tokens[this.currentTokenIndex];
+        return new Grouping(expr, tok.line);
       }
     }
     return new Expression(); // doing this to satisfy ts
   }
+
   unary(): Expression {
     if (this.currentTokenIsOneOf([TokenTypes.Not, TokenTypes.Minus, TokenTypes.Plus])) {
-      const op = this.prevToken;
+      const op = this.tokens[this.currentTokenIndex];
+      this.currentTokenIndex += 1;
       const operand = this.unary();
-      return new UnOp(op, operand);
+      return new UnOp(op, operand, op.line);
     }
     return this.primary();
+  }
 
-  }
-  factor(): Expression { // * or /
-    return this.unary();
-  }
-  term(): Expression { // - or +
-    let expr: Expression = this.factor();
-    while (this.currentTokenIsOneOf([TokenTypes.Mult, TokenTypes.Div])) {
-      const op = this.prevToken;
-      const right = this.factor();
-      expr = new BinOp(op, expr, right);
+
+  multiDiv(): Expression {
+    let expr: Expression = this.unary();
+    while (this.currentTokenIsOneOf([TokenTypes.Mult, TokenTypes.Div, TokenTypes.Mod])) {
+      const op = this.tokens[this.currentTokenIndex];
+      this.currentTokenIndex += 1;
+      const right = this.unary();
+      expr = new BinOp(op, expr, right, op.line);
     }
     return expr;
   }
-  expr(): Expression { // evaluates to a result
-    let expr = this.term();
+
+  addSub(): Expression {
+    let expr = this.multiDiv();
     while (this.currentTokenIsOneOf([TokenTypes.Plus, TokenTypes.Minus])) {
-      const op = this.prevToken;
-      const right = this.term();
-      expr = new BinOp(op, expr, right);
+      const op = this.tokens[this.currentTokenIndex];
+      this.currentTokenIndex += 1;
+      const right = this.multiDiv();
+      expr = new BinOp(op, expr, right, op.line);
     }
     return expr;
   }
+
   parse() {
-    const ast = this.expr();
+    const ast = this.addSub();
     return ast;
   }
 }

@@ -6,20 +6,18 @@ export class Tokenizer {
   currentChar: string = '';
   pos: number = 0;
   tokens: Token[] = [];
-  inputLength: number = 0;
   line: number = 1;
 
   constructor(input: string) {
     this.input = input;
-    this.inputLength = input.length;
   }
   getAllTokens(): Token[] {
     const result: Token[] = [];
-    let reachedEof = false;
-    while (!reachedEof) {
+    let reachedEofOrError = false;
+    while (!reachedEofOrError) {
       const tok = this.getToken();
       result.push(tok);
-      reachedEof = tok.type === TokenTypes.Eof;
+      reachedEofOrError = tok.type === TokenTypes.Eof || tok.type === TokenTypes.Illegal;
     }
     return result;
   }
@@ -28,7 +26,7 @@ export class Tokenizer {
 
     this.eatWhitespace();
     this.eatComment();
-    if (this.pos >= this.inputLength) {
+    if (this.pos >= this.input.length) {
       return {
         type: TokenTypes.Eof,
         literal: '',
@@ -183,6 +181,10 @@ export class Tokenizer {
           } else {
             tok.type = TokenTypes.Illegal;
           }
+        } else {
+          console.error(`Found illegal character '${this.currentChar}' at line ${this.line}`);
+          tok.type = TokenTypes.Illegal;
+          tok.literal = this.currentChar;
         }
         break;
     }
@@ -194,7 +196,7 @@ export class Tokenizer {
     while (true) {
       if (this.input[currPos] === ' ') {
         currPos += 1;
-      } else if (this.input[currPos] == '\n') {
+      } else if (this.input[currPos] == '\n' || this.input[currPos] == '\r') {
         this.line += 1;
         currPos += 1;
       } else {
@@ -207,7 +209,7 @@ export class Tokenizer {
   eatComment() {
     const isAtComment = () => this.input[this.pos] === '/' && this.input[this.pos + 1] === '/';
     const isAtNewLineCh = () => this.input[this.pos] == '\n';
-    const isAtEndOfInput = () => this.pos >= this.inputLength;
+    const isAtEndOfInput = () => this.pos >= this.input.length;
     if (isAtComment()) {
       while (true) {
         while (!isAtNewLineCh() && !isAtEndOfInput()) {
@@ -223,7 +225,7 @@ export class Tokenizer {
 
   readString(): string {
     const startPos = this.pos;
-    while (this.pos <= this.inputLength - 1) {
+    while (this.pos <= this.input.length - 1) {
       this.pos += 1;
       if (this.input[this.pos] == '\'') {
         this.pos += 1;
@@ -236,14 +238,14 @@ export class Tokenizer {
 
   readIdentifier(): string {
     const startPos = this.pos;
-    while (this.pos <= this.inputLength - 1 && isLetter(this.input[this.pos])) {
+    while (this.pos <= this.input.length - 1 && isLetter(this.input[this.pos])) {
       this.pos += 1;
     }
     return this.input.substring(startPos, this.pos);
   }
   readNumber(): string {
     const startPos = this.pos;
-    while (this.pos <= this.inputLength - 1 && (isDigit(this.input[this.pos]) || this.input[this.pos] == '.')) {
+    while (this.pos <= this.input.length - 1 && (isDigit(this.input[this.pos]) || this.input[this.pos] == '.')) {
       this.pos += 1;
     }
     return this.input.substring(startPos, this.pos);
