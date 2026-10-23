@@ -99,7 +99,7 @@ export class Parser {
     return expr;
   }
 
-  parse() {
+  parse(): Expression {
     const ast = this.addSub();
     return ast;
   }
